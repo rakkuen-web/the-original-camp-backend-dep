@@ -11,8 +11,6 @@ const roomTypeRoutes = require('./routes/roomTypes');
 const customerRoutes = require('./routes/customers');
 const activityRoutes = require('./routes/activities');
 const paymentRoutes = require('./routes/payments');
-const initializeDatabase = require('./init-db');
-
 const app = express();
 
 // Middleware
@@ -31,6 +29,7 @@ const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://hamzadanine95:Rakkuen
 
 console.log('Attempting to connect to MongoDB...');
 console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
+console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
 
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
@@ -39,7 +38,6 @@ mongoose.connect(mongoUri, {
   .then(async () => {
     console.log('MongoDB Atlas connected successfully');
     console.log('Database:', mongoose.connection.name);
-    await initializeDatabase();
   })
   .catch(err => {
     console.error('MongoDB connection error:', err);
