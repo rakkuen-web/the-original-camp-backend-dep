@@ -16,7 +16,14 @@ const initializeDatabase = require('./init-db');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:4200',
+    'https://original-camp-frontend-jnt3.vercel.app',
+    'https://railway.com'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // Database connection
