@@ -243,7 +243,7 @@ router.patch('/:id/status', auth, async (req, res) => {
         });
         
         const reviewToken = require('crypto').randomBytes(16).toString('hex');
-        const reviewUrl = `${process.env.FRONTEND_URL}/review/${reviewToken}`;
+        const reviewUrl = `${process.env.FRONTEND_URL}/review/${reviewToken}?ref=${reservation.bookingRef}&name=${encodeURIComponent(reservation.guestName)}&email=${encodeURIComponent(reservation.guestEmail)}`;
         
         transporter.sendMail({
           from: process.env.SMTP_USER,

@@ -7,6 +7,9 @@ const reviewSchema = new mongoose.Schema({
   token: String,
   rating: Number,
   comment: String,
+  guestName: String,
+  guestEmail: String,
+  bookingRef: String,
   isPublished: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
@@ -17,12 +20,15 @@ const Review = mongoose.model('Review', reviewSchema);
 router.post('/submit/:token', async (req, res) => {
   try {
     const { token } = req.params;
-    const { rating, comment } = req.body;
+    const { rating, comment, guestName, guestEmail, bookingRef } = req.body;
 
     const review = new Review({
       token,
       rating,
-      comment
+      comment,
+      guestName: guestName || 'Anonymous Guest',
+      guestEmail: guestEmail || '',
+      bookingRef: bookingRef || ''
     });
 
     await review.save();
