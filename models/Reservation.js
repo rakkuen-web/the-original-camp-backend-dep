@@ -56,7 +56,16 @@ const reservationSchema = new mongoose.Schema({
     name: String,
     type: String,
     price: Number
-  }]
+  }],
+  assignedRoom: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Room',
+    default: null
+  },
+  roomNumber: {
+    type: String,
+    default: null
+  }
 }, {
   timestamps: true
 });

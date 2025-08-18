@@ -6,9 +6,17 @@ const roomSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  roomTypeId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'RoomType',
+  roomType: {
+    type: String,
+    required: true,
+    enum: ['standard', 'deluxe', 'suite', 'family', 'romantic', 'adventure']
+  },
+  maxGuests: {
+    type: Number,
+    required: true
+  },
+  pricePerNight: {
+    type: Number,
     required: true
   },
   status: {
@@ -16,23 +24,11 @@ const roomSchema = new mongoose.Schema({
     enum: ['available', 'occupied', 'maintenance', 'cleaning'],
     default: 'available'
   },
-  floor: {
-    type: Number,
-    default: 1
-  },
-  location: {
-    type: String,
-    default: 'Desert View'
-  },
-  lastCleaned: {
-    type: Date,
-    default: Date.now
-  },
-  lastMaintenance: {
-    type: Date,
-    default: Date.now
-  },
-  notes: String
+  amenities: [String],
+  isActive: {
+    type: Boolean,
+    default: true
+  }
 }, {
   timestamps: true
 });

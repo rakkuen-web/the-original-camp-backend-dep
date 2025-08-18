@@ -14,12 +14,49 @@ router.post('/', async (req, res) => {
     // Use roomType if available, fallback to tentType
     const finalRoomType = roomType || tentType || 'standard';
     
+    // CRITICAL: Check availability before creating reservation
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    checkInDate.setHours(15, 0, 0, 0);
+    checkOutDate.setHours(11, 0, 0, 0);
+    
+    // Check for room availability
+    const Room = require('../models/Room');
+    const availableRooms = await Room.find({
+      roomType: finalRoomType,
+      maxGuests: { $gte: guests },
+      isActive: true
+    });
+    
+    if (availableRooms.length === 0) {
+      return res.status(400).json({ 
+        message: `No ${finalRoomType} rooms available for ${guests} guests` 
+      });
+    }
+    
+    // Check for conflicting reservations
+    const conflictingReservations = await Reservation.find({
+      tentType: finalRoomType,
+      status: { $in: ['confirmed', 'pending'] },
+      $or: [{
+        checkIn: { $lt: checkOutDate },
+        checkOut: { $gt: checkInDate }
+      }]
+    });
+    
+    const availableCount = availableRooms.length - conflictingReservations.length;
+    
+    if (availableCount <= 0) {
+      return res.status(400).json({ 
+        message: `No ${finalRoomType} rooms available for selected dates` 
+      });
+    }
+    
     // Use provided totalPrice or calculate it
     let finalTotalPrice = totalPrice;
     if (!finalTotalPrice) {
-      const settings = await Settings.findOne() || new Settings();
-      const pricePerNight = settings.tentPrices[finalRoomType] || 150;
-      const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
+      const pricePerNight = availableRooms[0].pricePerNight;
+      const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
       finalTotalPrice = pricePerNight * nights;
     }
 
@@ -41,8 +78,8 @@ router.post('/', async (req, res) => {
       guestName,
       guestEmail,
       guestPhone,
-      checkIn,
-      checkOut,
+      checkIn: checkInDate,
+      checkOut: checkOutDate,
       guests,
       tentType: finalRoomType,
       totalPrice: finalTotalPrice,
