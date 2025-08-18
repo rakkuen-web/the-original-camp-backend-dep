@@ -7,11 +7,14 @@ const reviewSchema = new mongoose.Schema({
   token: { type: String, unique: true },
   rating: Number,
   comment: String,
+  guestName: String,
+  guestEmail: String,
+  bookingRef: String,
   isPublished: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 
-const Review = mongoose.model('Review', reviewSchema);
+const Review = mongoose.model('GuestReview', reviewSchema);
 
 // Submit review
 router.post('/submit/:token', async (req, res) => {
@@ -22,7 +25,10 @@ router.post('/submit/:token', async (req, res) => {
     const review = new Review({
       token,
       rating,
-      comment
+      comment,
+      guestName: req.body.guestName || 'Guest',
+      guestEmail: req.body.guestEmail || '',
+      bookingRef: req.body.bookingRef || ''
     });
 
     await review.save();
