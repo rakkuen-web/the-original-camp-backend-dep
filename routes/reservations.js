@@ -26,6 +26,15 @@ router.post('/', async (req, res) => {
     // Generate booking reference
     const bookingRef = 'OC' + Date.now().toString().slice(-8) + Math.random().toString(36).substr(2, 3).toUpperCase();
 
+    // Determine status based on payment
+    let reservationStatus = 'pending';
+    let reservationPaymentStatus = paymentStatus || 'pending';
+    
+    // If payment is completed, auto-confirm reservation
+    if (reservationPaymentStatus === 'paid') {
+      reservationStatus = 'confirmed';
+    }
+    
     // Create room reservation
     const reservation = new Reservation({
       bookingRef,
@@ -39,8 +48,8 @@ router.post('/', async (req, res) => {
       totalPrice: finalTotalPrice,
       specialRequests,
       selectedActivities: selectedActivities || [],
-      paymentStatus: paymentStatus || 'pending',
-      status: status || 'pending'
+      paymentStatus: reservationPaymentStatus,
+      status: reservationStatus
     });
     
     console.log('Creating reservation:', reservation);
@@ -135,24 +144,55 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
+// Update payment status (admin)
+router.patch('/:id/payment', auth, async (req, res) => {
+  try {
+    const { paymentStatus } = req.body;
+    const reservation = await Reservation.findById(req.params.id);
+    
+    if (!reservation) {
+      return res.status(404).json({ message: 'Reservation not found' });
+    }
+    
+    reservation.paymentStatus = paymentStatus;
+    
+    // Auto-confirm when payment is completed
+    if (paymentStatus === 'paid' && reservation.status === 'pending') {
+      reservation.status = 'confirmed';
+    }
+    
+    await reservation.save();
+    res.json(reservation);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Update reservation status (admin)
 router.patch('/:id/status', auth, async (req, res) => {
   try {
     const { status } = req.body;
-    const reservation = await Reservation.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
+    const reservation = await Reservation.findById(req.params.id);
+    
     if (!reservation) {
       return res.status(404).json({ message: 'Reservation not found' });
     }
+    
+    // Validation: Cannot confirm without payment
+    if (status === 'confirmed' && reservation.paymentStatus !== 'paid') {
+      return res.status(400).json({ 
+        message: 'Cannot confirm reservation without payment. Please update payment status first.' 
+      });
+    }
+    
+    // Update status
+    reservation.status = status;
+    await reservation.save();
     
     // Send review email when reservation is completed
     if (status === 'completed') {
       console.log('Reservation completed, attempting to send review email to:', reservation.guestEmail);
       
-      // Simple email attempt without database
       try {
         const nodemailer = require('nodemailer');
         const transporter = nodemailer.createTransport({
