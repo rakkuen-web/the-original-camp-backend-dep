@@ -11,6 +11,7 @@ const roomTypeRoutes = require('./routes/roomTypes');
 const customerRoutes = require('./routes/customers');
 const activityRoutes = require('./routes/activities');
 const paymentRoutes = require('./routes/payments');
+const { router: reviewRoutes } = require('./routes/reviews');
 const app = express();
 
 // Middleware
@@ -52,6 +53,7 @@ app.use('/api/room-types', roomTypeRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'The Original Camp API' });

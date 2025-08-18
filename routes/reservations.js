@@ -2,6 +2,7 @@ const express = require('express');
 const Reservation = require('../models/Reservation');
 const Settings = require('../models/Settings');
 const auth = require('../middleware/auth');
+const { sendReviewEmail } = require('./reviews');
 const router = express.Router();
 
 // Create reservation (public)
@@ -146,6 +147,12 @@ router.patch('/:id/status', auth, async (req, res) => {
     if (!reservation) {
       return res.status(404).json({ message: 'Reservation not found' });
     }
+    
+    // Send review email when reservation is completed
+    if (status === 'completed') {
+      await sendReviewEmail(reservation);
+    }
+    
     res.json(reservation);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
