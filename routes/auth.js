@@ -7,16 +7,33 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    console.log('Login attempt for:', email);
+    console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+    console.log('JWT_EXPIRE:', process.env.JWT_EXPIRE);
 
     const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user) {
+      console.log('User not found');
       return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    
+    const passwordMatch = await user.comparePassword(password);
+    console.log('Password match:', passwordMatch);
+    
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is missing!');
+      return res.status(500).json({ message: 'Server configuration error' });
     }
 
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE }
+      { expiresIn: process.env.JWT_EXPIRE || '24h' }
     );
 
     res.json({
@@ -28,6 +45,7 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
