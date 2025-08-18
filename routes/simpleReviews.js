@@ -4,7 +4,7 @@ const router = express.Router();
 
 // Simple Review Schema
 const reviewSchema = new mongoose.Schema({
-  token: String,
+  token: { type: String, unique: true },
   rating: Number,
   comment: String,
   isPublished: { type: Boolean, default: false },
