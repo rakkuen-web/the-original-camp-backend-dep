@@ -60,6 +60,18 @@ app.get('/', (req, res) => {
   res.json({ message: 'The Original Camp API' });
 });
 
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    env: {
+      NODE_ENV: process.env.NODE_ENV,
+      JWT_SECRET_EXISTS: !!process.env.JWT_SECRET,
+      MONGODB_URI_EXISTS: !!process.env.MONGODB_URI
+    }
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
