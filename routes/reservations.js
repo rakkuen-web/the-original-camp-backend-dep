@@ -2,7 +2,7 @@ const express = require('express');
 const Reservation = require('../models/Reservation');
 const Settings = require('../models/Settings');
 const auth = require('../middleware/auth');
-const { sendReviewEmail } = require('./reviews');
+// const { sendReviewEmail } = require('./reviews');
 const router = express.Router();
 
 // Create reservation (public)
@@ -150,7 +150,7 @@ router.patch('/:id/status', auth, async (req, res) => {
     
     // Send review email when reservation is completed
     if (status === 'completed') {
-      await sendReviewEmail(reservation);
+      console.log('Reservation completed, would send review email to:', reservation.guestEmail);
     }
     
     res.json(reservation);
