@@ -150,7 +150,39 @@ router.patch('/:id/status', auth, async (req, res) => {
     
     // Send review email when reservation is completed
     if (status === 'completed') {
-      console.log('Reservation completed, would send review email to:', reservation.guestEmail);
+      console.log('Reservation completed, attempting to send review email to:', reservation.guestEmail);
+      
+      // Simple email attempt without database
+      try {
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: 587,
+          secure: false,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+          }
+        });
+        
+        transporter.sendMail({
+          from: process.env.SMTP_USER,
+          to: reservation.guestEmail,
+          subject: 'Thank you for your stay - Share your experience',
+          html: `
+            <h2>Thank you ${reservation.guestName}!</h2>
+            <p>We hope you enjoyed your stay at The Original Camp.</p>
+            <p>Please share your experience with us!</p>
+            <p>Booking Reference: ${reservation.bookingRef}</p>
+          `
+        }).then(() => {
+          console.log('✅ Review email sent successfully to:', reservation.guestEmail);
+        }).catch(err => {
+          console.error('❌ Email sending failed:', err.message);
+        });
+      } catch (error) {
+        console.error('❌ Email setup failed:', error.message);
+      }
     }
     
     res.json(reservation);
