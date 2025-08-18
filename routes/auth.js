@@ -81,7 +81,7 @@ router.post('/reset-password', async (req, res) => {
       html: `
         <h2>Password Reset Request</h2>
         <p>Click the link below to reset your password:</p>
-        <a href="http://localhost:4200/reset-password/${resetToken}">Reset Password</a>
+        <a href="${process.env.FRONTEND_URL}/reset-password/${resetToken}">Reset Password</a>
         <p>This link expires in 1 hour.</p>
       `
     });

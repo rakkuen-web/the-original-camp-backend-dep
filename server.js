@@ -17,8 +17,7 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:4200',
-    'https://original-camp-frontend-jnt3.vercel.app',
-    'https://railway.com'
+    'https://original-camp-frontend-jnt3.vercel.app'
   ],
   credentials: true
 }));

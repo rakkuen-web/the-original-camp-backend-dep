@@ -22,8 +22,8 @@ router.post('/paypal/create', async (req, res) => {
         "payment_method": "paypal"
       },
       "redirect_urls": {
-        "return_url": `http://localhost:4200/booking-confirmation?success=true`,
-        "cancel_url": `http://localhost:4200/booking?cancelled=true`
+        "return_url": `${process.env.FRONTEND_URL}/booking-confirmation?success=true`,
+        "cancel_url": `${process.env.FRONTEND_URL}/booking?cancelled=true`
       },
       "transactions": [{
         "item_list": {
