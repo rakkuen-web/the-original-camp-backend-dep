@@ -165,15 +165,27 @@ router.patch('/:id/status', auth, async (req, res) => {
           }
         });
         
+        const reviewToken = require('crypto').randomBytes(16).toString('hex');
+        const reviewUrl = `${process.env.FRONTEND_URL}/review/${reviewToken}`;
+        
         transporter.sendMail({
           from: process.env.SMTP_USER,
           to: reservation.guestEmail,
-          subject: 'Thank you for your stay - Share your experience',
+          subject: 'Share Your Experience - The Original Camp',
           html: `
-            <h2>Thank you ${reservation.guestName}!</h2>
-            <p>We hope you enjoyed your stay at The Original Camp.</p>
-            <p>Please share your experience with us!</p>
-            <p>Booking Reference: ${reservation.bookingRef}</p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #DAA520;">Thank you for staying with us, ${reservation.guestName}!</h2>
+              <p>We hope you had an amazing experience at The Original Camp.</p>
+              <p>Your feedback is very important to us. Please take a moment to share your experience:</p>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${reviewUrl}" style="background: #DAA520; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Leave a Review ⭐</a>
+              </div>
+              
+              <p><strong>Booking Reference:</strong> ${reservation.bookingRef}</p>
+              <p>Thank you for choosing The Original Camp!</p>
+              <p>Best regards,<br>The Original Camp Team</p>
+            </div>
           `
         }).then(() => {
           console.log('✅ Review email sent successfully to:', reservation.guestEmail);
