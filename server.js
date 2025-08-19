@@ -17,10 +17,10 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: [
-    'http://localhost:4200',
-    'https://original-camp-frontend-5p54.vercel.app'
-  ],
+origin: [
+  'http://localhost:4200',
+  'https://original-camp-frontend-5p54.vercel.app'
+],
   credentials: true
 }));
 app.use(express.json());
