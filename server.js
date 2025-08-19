@@ -19,7 +19,8 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:4200',
-    'https://original-camp-frontend-jnt3.vercel.app'
+   // 'https://original-camp-frontend-jnt3.vercel.app'
+    'https://original-camp-frontend-5p54.vercel.app'
   ],
   credentials: true
 }));
