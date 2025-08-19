@@ -245,6 +245,9 @@ router.patch('/:id/status', auth, async (req, res) => {
         const reviewToken = require('crypto').randomBytes(16).toString('hex');
         const reviewUrl = `${process.env.FRONTEND_URL}/review/${reviewToken}?name=${encodeURIComponent(reservation.guestName)}&email=${encodeURIComponent(reservation.guestEmail)}&ref=${reservation.bookingRef}`;
         
+        console.log('Generated review URL:', reviewUrl);
+        console.log('Guest info:', { name: reservation.guestName, email: reservation.guestEmail, ref: reservation.bookingRef });
+        
         transporter.sendMail({
           from: process.env.SMTP_USER,
           to: reservation.guestEmail,
