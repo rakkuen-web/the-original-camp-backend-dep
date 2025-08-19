@@ -6,16 +6,12 @@ const roomSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  roomType: {
-    type: String,
-    required: true,
-    enum: ['standard', 'deluxe', 'suite', 'family', 'romantic', 'adventure']
-  },
-  maxGuests: {
-    type: Number,
+  roomTypeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'RoomType',
     required: true
   },
-  pricePerNight: {
+  maxGuests: {
     type: Number,
     required: true
   },

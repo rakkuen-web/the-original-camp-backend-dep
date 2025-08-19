@@ -31,7 +31,7 @@ const reservationSchema = new mongoose.Schema({
     required: true,
     min: 1
   },
-  tentType: {
+  roomType: {
     type: String,
     enum: ['standard', 'deluxe', 'suite', 'family', 'romantic', 'adventure'],
     required: true

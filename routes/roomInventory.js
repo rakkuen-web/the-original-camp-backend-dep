@@ -26,41 +26,42 @@ router.post('/check-availability', async (req, res) => {
     checkInDate.setHours(15, 0, 0, 0); // 3 PM check-in
     checkOutDate.setHours(11, 0, 0, 0); // 11 AM check-out
     
-    // Find rooms of requested type that can accommodate guests
-    const availableRooms = await Room.find({
+    // Find actual rooms of this type
+    const totalRooms = await Room.find({
       roomType: roomType,
       maxGuests: { $gte: guests },
-      isActive: true,
-      status: { $in: ['available', 'cleaning'] }
+      isActive: true
     });
     
-    if (availableRooms.length === 0) {
+    if (totalRooms.length === 0) {
       return res.json({ 
         available: false, 
+        availableRooms: 0,
+        totalRooms: 0,
         message: `No ${roomType} rooms available for ${guests} guests` 
       });
     }
     
-    // Check for conflicting reservations
+    // Check for conflicting reservations (both assigned and unassigned)
     const conflictingReservations = await Reservation.find({
-      tentType: roomType,
+      roomType: roomType,
       status: { $in: ['confirmed', 'pending'] },
-      $or: [
-        {
-          checkIn: { $lt: checkOutDate },
-          checkOut: { $gt: checkInDate }
-        }
-      ]
+      $or: [{
+        checkIn: { $lt: checkOutDate },
+        checkOut: { $gt: checkInDate }
+      }]
     });
     
-    const occupiedRooms = conflictingReservations.length;
-    const availableCount = availableRooms.length - occupiedRooms;
+    const occupiedCount = conflictingReservations.length;
+    const availableCount = Math.max(0, totalRooms.length - occupiedCount);
+    
+    console.log(`${roomType}: ${totalRooms.length} total, ${occupiedCount} occupied, ${availableCount} available`);
     
     res.json({
       available: availableCount > 0,
-      availableRooms: Math.max(0, availableCount),
-      totalRooms: availableRooms.length,
-      pricePerNight: availableRooms[0]?.pricePerNight || 0
+      availableRooms: availableCount,
+      totalRooms: totalRooms.length,
+      pricePerNight: totalRooms[0]?.pricePerNight || 0
     });
     
   } catch (error) {

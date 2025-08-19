@@ -2,14 +2,46 @@ const express = require('express');
 const Reservation = require('../models/Reservation');
 const Settings = require('../models/Settings');
 const auth = require('../middleware/auth');
+const { csrfProtection } = require('../middleware/csrf');
+const { reservationLimiter } = require('../middleware/rateLimiter');
 // const { sendReviewEmail } = require('./reviews');
 const router = express.Router();
 
 // Create reservation (public)
-router.post('/', async (req, res) => {
+router.post('/', reservationLimiter, async (req, res) => {
   try {
-    console.log('Received reservation request:', req.body);
+    console.log('Received reservation request from:', req.ip);
     const { guestName, guestEmail, guestPhone, checkIn, checkOut, guests, roomType, tentType, totalPrice, specialRequests, selectedActivities, paymentStatus, status } = req.body;
+    
+    // Input validation
+    if (!guestName || !guestEmail || !guestPhone || !checkIn || !checkOut || !guests) {
+      return res.status(400).json({ message: 'Missing required fields: guestName, guestEmail, guestPhone, checkIn, checkOut, guests' });
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(guestEmail)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+    
+    // Date validation
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (checkInDate < today) {
+      return res.status(400).json({ message: 'Check-in date cannot be in the past' });
+    }
+    
+    if (checkOutDate <= checkInDate) {
+      return res.status(400).json({ message: 'Check-out date must be after check-in date' });
+    }
+    
+    // Guest count validation
+    if (guests < 1 || guests > 10) {
+      return res.status(400).json({ message: 'Guest count must be between 1 and 10' });
+    }
 
     // Use roomType if available, fallback to tentType
     const finalRoomType = roomType || tentType || 'standard';
@@ -36,7 +68,7 @@ router.post('/', async (req, res) => {
     
     // Check for conflicting reservations
     const conflictingReservations = await Reservation.find({
-      tentType: finalRoomType,
+      roomType: finalRoomType,
       status: { $in: ['confirmed', 'pending'] },
       $or: [{
         checkIn: { $lt: checkOutDate },
@@ -81,7 +113,7 @@ router.post('/', async (req, res) => {
       checkIn: checkInDate,
       checkOut: checkOutDate,
       guests,
-      tentType: finalRoomType,
+      roomType: finalRoomType,
       totalPrice: finalTotalPrice,
       specialRequests,
       selectedActivities: selectedActivities || [],
@@ -89,11 +121,32 @@ router.post('/', async (req, res) => {
       status: reservationStatus
     });
     
-    console.log('Creating reservation:', reservation);
+    console.log('Creating reservation with booking ref:', reservation.bookingRef);
 
     const savedReservation = await reservation.save();
     console.log('Reservation saved successfully:', savedReservation._id);
-    console.log('Saved reservation data:', savedReservation);
+    
+    // Auto-assign available room if confirmed
+    if (savedReservation.status === 'confirmed') {
+      try {
+        const availableRoom = await Room.findOne({
+          roomTypeId: { $in: availableRooms.map(r => r.roomTypeId) },
+          isActive: true,
+          status: 'available'
+        }).populate('roomTypeId');
+        
+        if (availableRoom && availableRoom.roomTypeId.type === finalRoomType) {
+          savedReservation.assignedRoom = availableRoom._id;
+          savedReservation.roomNumber = availableRoom.roomNumber;
+          await savedReservation.save();
+          console.log(`Auto-assigned room ${availableRoom.roomNumber} to reservation ${savedReservation.bookingRef}`);
+        }
+      } catch (assignError) {
+        console.error('Room assignment error:', assignError);
+      }
+    }
+    
+    console.log('Reservation saved with ID:', savedReservation._id);
     
     // Verify it was actually saved by querying it back
     const verifyReservation = await Reservation.findById(savedReservation._id);
@@ -165,7 +218,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Update reservation (admin)
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, csrfProtection, async (req, res) => {
   try {
     const reservation = await Reservation.findByIdAndUpdate(
       req.params.id,
@@ -182,7 +235,7 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 // Update payment status (admin)
-router.patch('/:id/payment', auth, async (req, res) => {
+router.patch('/:id/payment', auth, csrfProtection, async (req, res) => {
   try {
     const { paymentStatus } = req.body;
     const reservation = await Reservation.findById(req.params.id);
@@ -196,6 +249,25 @@ router.patch('/:id/payment', auth, async (req, res) => {
     // Auto-confirm when payment is completed
     if (paymentStatus === 'paid' && reservation.status === 'pending') {
       reservation.status = 'confirmed';
+      
+      // Auto-assign room when confirmed
+      if (!reservation.assignedRoom) {
+        try {
+          const Room = require('../models/Room');
+          const availableRoom = await Room.findOne({
+            isActive: true,
+            status: 'available'
+          }).populate('roomTypeId');
+          
+          if (availableRoom && availableRoom.roomTypeId.type === reservation.roomType) {
+            reservation.assignedRoom = availableRoom._id;
+            reservation.roomNumber = availableRoom.roomNumber;
+            console.log(`Auto-assigned room ${availableRoom.roomNumber} to reservation ${reservation.bookingRef}`);
+          }
+        } catch (assignError) {
+          console.error('Room assignment error:', assignError);
+        }
+      }
     }
     
     await reservation.save();
@@ -206,7 +278,7 @@ router.patch('/:id/payment', auth, async (req, res) => {
 });
 
 // Update reservation status (admin)
-router.patch('/:id/status', auth, async (req, res) => {
+router.patch('/:id/status', auth, csrfProtection, async (req, res) => {
   try {
     const { status } = req.body;
     const reservation = await Reservation.findById(req.params.id);
@@ -228,7 +300,7 @@ router.patch('/:id/status', auth, async (req, res) => {
     
     // Send review email when reservation is completed
     if (status === 'completed') {
-      console.log('Reservation completed, attempting to send review email to:', reservation.guestEmail);
+      console.log('Reservation completed, sending review email for booking:', reservation.bookingRef);
       
       try {
         const nodemailer = require('nodemailer');
@@ -245,8 +317,7 @@ router.patch('/:id/status', auth, async (req, res) => {
         const reviewToken = require('crypto').randomBytes(16).toString('hex');
         const reviewUrl = `${process.env.FRONTEND_URL}/review/${reviewToken}?name=${encodeURIComponent(reservation.guestName)}&email=${encodeURIComponent(reservation.guestEmail)}&ref=${reservation.bookingRef}`;
         
-        console.log('Generated review URL:', reviewUrl);
-        console.log('Guest info:', { name: reservation.guestName, email: reservation.guestEmail, ref: reservation.bookingRef });
+        console.log('Review email prepared for booking:', reservation.bookingRef);
         
         transporter.sendMail({
           from: process.env.SMTP_USER,
@@ -268,9 +339,9 @@ router.patch('/:id/status', auth, async (req, res) => {
             </div>
           `
         }).then(() => {
-          console.log('✅ Review email sent successfully to:', reservation.guestEmail);
+          console.log('✅ Review email sent successfully for booking:', reservation.bookingRef);
         }).catch(err => {
-          console.error('❌ Email sending failed:', err.message);
+          console.error('❌ Email sending failed for booking:', reservation.bookingRef);
         });
       } catch (error) {
         console.error('❌ Email setup failed:', error.message);
@@ -284,7 +355,7 @@ router.patch('/:id/status', auth, async (req, res) => {
 });
 
 // Delete reservation (admin)
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', auth, csrfProtection, async (req, res) => {
   try {
     const reservation = await Reservation.findByIdAndDelete(req.params.id);
     if (!reservation) {
