@@ -2,12 +2,10 @@ const express = require('express');
 const Reservation = require('../models/Reservation');
 const Settings = require('../models/Settings');
 const auth = require('../middleware/auth');
-const { csrfProtection } = require('../middleware/csrf');
-const { reservationLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 // Create reservation (public)
-router.post('/', reservationLimiter, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     console.log('Received reservation request from:', req.ip);
     const { guestName, guestEmail, guestPhone, checkIn, checkOut, guests, roomType, tentType, totalPrice, specialRequests, selectedActivities, paymentStatus, status } = req.body;
