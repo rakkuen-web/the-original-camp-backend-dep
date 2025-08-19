@@ -47,8 +47,6 @@ router.post('/', reservationLimiter, async (req, res) => {
     const finalRoomType = roomType || tentType || 'standard';
     
     // CRITICAL: Check availability before creating reservation
-    const checkInDate = new Date(checkIn);
-    const checkOutDate = new Date(checkOut);
     checkInDate.setHours(15, 0, 0, 0);
     checkOutDate.setHours(11, 0, 0, 0);
     
