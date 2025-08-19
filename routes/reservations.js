@@ -7,7 +7,7 @@ const router = express.Router();
 // Create reservation (public)
 router.post('/', async (req, res) => {
   try {
-    console.log('Received reservation request from:', req.ip);
+
     const { guestName, guestEmail, guestPhone, checkIn, checkOut, guests, roomType, tentType, totalPrice, specialRequests, selectedActivities, paymentStatus, status } = req.body;
     
     // Input validation

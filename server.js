@@ -19,7 +19,8 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:4200',
-    'https://original-camp-frontend-jnt3.vercel.app'
+    'https://original-camp-frontend-jnt3.vercel.app',
+    'https://original-camp-frontend-5p54.vercel.app'
   ],
   credentials: true
 }));
@@ -28,21 +29,17 @@ app.use(express.json());
 // Database connection
 const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://hamzadanine95:Rakkuen1995@cluster0.4qsuand.mongodb.net/original-camp?retryWrites=true&w=majority';
 
-console.log('Attempting to connect to MongoDB...');
-console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
-console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+// Connecting to database...
 
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
   .then(async () => {
-    console.log('MongoDB Atlas connected successfully');
-    console.log('Database:', mongoose.connection.name);
+    console.log('Database connected');
   })
   .catch(err => {
-    console.error('MongoDB connection error:', err);
-    console.error('Connection string:', process.env.MONGODB_URI?.replace(/:[^:@]*@/, ':****@'));
+    console.error('Database connection failed');
   });
 
 // Routes
@@ -64,12 +61,7 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    timestamp: new Date().toISOString(),
-    env: {
-      NODE_ENV: process.env.NODE_ENV,
-      JWT_SECRET_EXISTS: !!process.env.JWT_SECRET,
-      MONGODB_URI_EXISTS: !!process.env.MONGODB_URI
-    }
+    timestamp: new Date().toISOString()
   });
 });
 
