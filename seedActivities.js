@@ -17,7 +17,8 @@ async function seedActivities() {
         price: 50,
         description: 'Experience the desert on camelback with our guided trekking tours',
         duration: 2,
-        maxParticipants: 10
+        maxParticipants: 10,
+        images: ['camels.jpg']
       },
       {
         name: 'Buggy Adventure',
@@ -25,7 +26,8 @@ async function seedActivities() {
         price: 80,
         description: 'Thrilling dune buggy rides across the desert landscape',
         duration: 1.5,
-        maxParticipants: 6
+        maxParticipants: 6,
+        images: ['buggies.jpg']
       },
       {
         name: 'Stargazing Experience',
@@ -33,7 +35,8 @@ async function seedActivities() {
         price: 30,
         description: 'Guided stargazing session with telescope and desert astronomy',
         duration: 2,
-        maxParticipants: 15
+        maxParticipants: 15,
+        images: ['camp.jpg']
       },
       {
         name: 'Desert Dining',
@@ -41,7 +44,8 @@ async function seedActivities() {
         price: 60,
         description: 'Traditional Moroccan dinner under the stars',
         duration: 3,
-        maxParticipants: 20
+        maxParticipants: 20,
+        images: ['desert-dining.jpg']
       }
     ];
     
