@@ -27,6 +27,8 @@ router.post('/', async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    // More lenient date validation - allow today and future dates
+    checkInDate.setHours(0, 0, 0, 0);
     if (checkInDate < today) {
       return res.status(400).json({ message: 'Check-in date cannot be in the past' });
     }
@@ -49,15 +51,32 @@ router.post('/', async (req, res) => {
     
     // Check for room availability
     const Room = require('../models/Room');
+    const RoomType = require('../models/RoomType');
+    
+    // Find the room type first
+    const roomTypeDoc = await RoomType.findOne({ type: finalRoomType });
+    if (!roomTypeDoc) {
+      return res.status(400).json({ 
+        message: `Room type ${finalRoomType} not found` 
+      });
+    }
+    
+    // Check if room type can accommodate guests
+    if (roomTypeDoc.maxOccupancy < guests) {
+      return res.status(400).json({ 
+        message: `${finalRoomType} rooms can only accommodate ${roomTypeDoc.maxOccupancy} guests` 
+      });
+    }
+    
     const availableRooms = await Room.find({
-      roomType: finalRoomType,
-      maxGuests: { $gte: guests },
-      isActive: true
+      roomTypeId: roomTypeDoc._id,
+      isActive: true,
+      status: 'available'
     });
     
     if (availableRooms.length === 0) {
       return res.status(400).json({ 
-        message: `No ${finalRoomType} rooms available for ${guests} guests` 
+        message: `No ${finalRoomType} rooms available` 
       });
     }
     
@@ -82,9 +101,8 @@ router.post('/', async (req, res) => {
     // Calculate price
     let finalTotalPrice = totalPrice;
     if (!finalTotalPrice) {
-      const pricePerNight = availableRooms[0].pricePerNight;
       const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-      finalTotalPrice = pricePerNight * nights;
+      finalTotalPrice = roomTypeDoc.price * nights;
     }
 
     // Generate booking reference
