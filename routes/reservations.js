@@ -2,6 +2,7 @@ const express = require('express');
 const Reservation = require('../models/Reservation');
 const Settings = require('../models/Settings');
 const auth = require('../middleware/auth');
+const { sendBookingConfirmation } = require('../services/emailService');
 const router = express.Router();
 
 // Create reservation (public)
@@ -135,6 +136,24 @@ router.post('/', async (req, res) => {
     
     const savedReservation = await reservation.save();
     
+    // Send confirmation email
+    try {
+      await sendBookingConfirmation({
+        bookingRef,
+        guestName,
+        guestEmail,
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
+        guests,
+        tentType: finalRoomType,
+        totalPrice: finalTotalPrice,
+        selectedActivities: selectedActivities || []
+      });
+      console.log('Confirmation email sent successfully');
+    } catch (emailError) {
+      console.error('Failed to send confirmation email:', emailError);
+    }
+    
     res.status(201).json({ 
       reservation: savedReservation, 
       bookingRef,
@@ -231,6 +250,16 @@ router.get('/availability', async (req, res) => {
 
 // Get all reservations (admin)
 router.get('/', auth, async (req, res) => {
+  try {
+    const reservations = await Reservation.find({}).sort({ createdAt: -1 });
+    res.json(reservations);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get all reservations (public for dashboard)
+router.get('/all', async (req, res) => {
   try {
     const reservations = await Reservation.find({}).sort({ createdAt: -1 });
     res.json(reservations);
