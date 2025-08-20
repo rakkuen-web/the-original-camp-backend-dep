@@ -17,7 +17,12 @@ const userSchema = new mongoose.Schema({
     default: 'admin'
   },
   resetToken: String,
-  resetTokenExpiry: Date
+  resetTokenExpiry: Date,
+  activeSession: {
+    token: String,
+    deviceId: String,
+    loginTime: Date
+  }
 }, {
   timestamps: true
 });

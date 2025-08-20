@@ -16,6 +16,14 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'Invalid token.' });
     }
 
+    // Check if this token matches the active session
+    if (!user.activeSession || user.activeSession.token !== token) {
+      return res.status(401).json({ 
+        message: 'Session expired or logged in from another device.',
+        sessionExpired: true
+      });
+    }
+
     req.user = user;
     next();
   } catch (error) {

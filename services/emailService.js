@@ -40,14 +40,15 @@ const sendBookingConfirmation = async (bookingData) => {
     <p>${activitiesList}</p>
     
     <h3>📍 Location:</h3>
-    <p>Agafay Desert, Marrakech, Morocco</p>
+    <p>Agafay desert Marrakech - Morocco</p>
     
     <p>We look forward to providing you with an unforgettable desert experience!</p>
     
     <p>Best regards,<br>
     The Original Camp Team<br>
-    📞 +212 123 456 789<br>
-    📧 info@originalcamp.com</p>
+    📞 +212 666 78 33 62<br>
+    📞 +212 661 31 32 15<br>
+    📧 contact@theoriginalcamp.com</p>
   `;
 
   const mailOptions = {
