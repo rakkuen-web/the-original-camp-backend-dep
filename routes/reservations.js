@@ -128,6 +128,76 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Check room availability (public)
+router.get('/availability', async (req, res) => {
+  try {
+    const { checkIn, checkOut, guests } = req.query;
+    
+    if (!checkIn || !checkOut || !guests) {
+      return res.status(400).json({ message: 'Missing required parameters: checkIn, checkOut, guests' });
+    }
+    
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const guestCount = parseInt(guests);
+    
+    // Set proper hours
+    checkInDate.setHours(15, 0, 0, 0);
+    checkOutDate.setHours(11, 0, 0, 0);
+    
+    const Room = require('../models/Room');
+    const RoomType = require('../models/RoomType');
+    
+    // Get all room types
+    const roomTypes = await RoomType.find({ isActive: true });
+    const availability = [];
+    
+    for (const roomType of roomTypes) {
+      // Get rooms of this type that can accommodate the guests
+      const availableRooms = await Room.find({
+        roomType: roomType.name,
+        maxGuests: { $gte: guestCount },
+        isActive: true
+      });
+      
+      if (availableRooms.length > 0) {
+        // Check for conflicting reservations
+        const conflictingReservations = await Reservation.find({
+          roomType: roomType.name,
+          status: { $in: ['confirmed', 'pending'] },
+          $or: [{
+            checkIn: { $lt: checkOutDate },
+            checkOut: { $gt: checkInDate }
+          }]
+        });
+        
+        const availableCount = availableRooms.length - conflictingReservations.length;
+        
+        if (availableCount > 0) {
+          const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+          const totalPrice = availableRooms[0].pricePerNight * nights;
+          
+          availability.push({
+            roomType: roomType.name,
+            description: roomType.description,
+            maxGuests: availableRooms[0].maxGuests,
+            pricePerNight: availableRooms[0].pricePerNight,
+            totalPrice,
+            availableCount,
+            nights,
+            amenities: roomType.amenities || []
+          });
+        }
+      }
+    }
+    
+    res.json({ availability });
+  } catch (error) {
+    console.error('Availability check error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Get all reservations (admin)
 router.get('/', auth, async (req, res) => {
   try {
