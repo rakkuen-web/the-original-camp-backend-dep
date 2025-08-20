@@ -16,7 +16,30 @@ const reviewSchema = new mongoose.Schema({
 
 const Review = mongoose.model('GuestReview', reviewSchema);
 
-// Submit review
+// Submit review without token
+router.post('/submit', async (req, res) => {
+  try {
+    const { rating, comment, guestName, guestEmail, bookingRef } = req.body;
+
+    const review = new Review({
+      rating,
+      comment,
+      guestName: guestName || 'Guest',
+      guestEmail: guestEmail || '',
+      bookingRef: bookingRef || ''
+    });
+
+    await review.save();
+    console.log('Review saved:', review);
+    
+    res.json({ message: 'Review submitted successfully' });
+  } catch (error) {
+    console.error('Error saving review:', error);
+    res.status(500).json({ message: 'Error saving review' });
+  }
+});
+
+// Submit review with token (legacy)
 router.post('/submit/:token', async (req, res) => {
   try {
     const { token } = req.params;
@@ -48,6 +71,16 @@ router.get('/', async (req, res) => {
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching reviews' });
+  }
+});
+
+// Get published reviews
+router.get('/published', async (req, res) => {
+  try {
+    const reviews = await Review.find({ isPublished: true }).sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching published reviews' });
   }
 });
 
