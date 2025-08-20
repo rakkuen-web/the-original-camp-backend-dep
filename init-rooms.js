@@ -28,37 +28,37 @@ async function initializeRooms() {
     console.log('Cleared existing rooms');
 
     const rooms = [
-      // Desert Standard (4 rooms)
-      { roomNumber: 'DS-001', roomTypeId: roomTypeMap['standard'], status: 'available', location: 'North Desert View' },
-      { roomNumber: 'DS-002', roomTypeId: roomTypeMap['standard'], status: 'occupied', location: 'North Desert View' },
-      { roomNumber: 'DS-003', roomTypeId: roomTypeMap['standard'], status: 'available', location: 'East Desert View' },
-      { roomNumber: 'DS-004', roomTypeId: roomTypeMap['standard'], status: 'cleaning', location: 'East Desert View' },
+      // Desert Standard (4 rooms) - maxOccupancy: 2
+      { roomNumber: 'DS-001', roomTypeId: roomTypeMap['standard'], maxGuests: 2, status: 'available' },
+      { roomNumber: 'DS-002', roomTypeId: roomTypeMap['standard'], maxGuests: 2, status: 'occupied' },
+      { roomNumber: 'DS-003', roomTypeId: roomTypeMap['standard'], maxGuests: 2, status: 'available' },
+      { roomNumber: 'DS-004', roomTypeId: roomTypeMap['standard'], maxGuests: 2, status: 'cleaning' },
 
-      // Desert Deluxe (4 rooms)
-      { roomNumber: 'DD-001', roomTypeId: roomTypeMap['deluxe'], status: 'available', location: 'Premium Desert View' },
-      { roomNumber: 'DD-002', roomTypeId: roomTypeMap['deluxe'], status: 'occupied', location: 'Premium Desert View' },
-      { roomNumber: 'DD-003', roomTypeId: roomTypeMap['deluxe'], status: 'available', location: 'Premium Desert View' },
-      { roomNumber: 'DD-004', roomTypeId: roomTypeMap['deluxe'], status: 'maintenance', location: 'Premium Desert View' },
+      // Desert Deluxe (4 rooms) - maxOccupancy: 3
+      { roomNumber: 'DD-001', roomTypeId: roomTypeMap['deluxe'], maxGuests: 3, status: 'available' },
+      { roomNumber: 'DD-002', roomTypeId: roomTypeMap['deluxe'], maxGuests: 3, status: 'occupied' },
+      { roomNumber: 'DD-003', roomTypeId: roomTypeMap['deluxe'], maxGuests: 3, status: 'available' },
+      { roomNumber: 'DD-004', roomTypeId: roomTypeMap['deluxe'], maxGuests: 3, status: 'maintenance' },
 
-      // Desert Suite (3 rooms)
-      { roomNumber: 'DSU-001', roomTypeId: roomTypeMap['suite'], status: 'available', location: 'Luxury Desert View' },
-      { roomNumber: 'DSU-002', roomTypeId: roomTypeMap['suite'], status: 'occupied', location: 'Luxury Desert View' },
-      { roomNumber: 'DSU-003', roomTypeId: roomTypeMap['suite'], status: 'available', location: 'Luxury Desert View' },
+      // Desert Suite (3 rooms) - maxOccupancy: 4
+      { roomNumber: 'DSU-001', roomTypeId: roomTypeMap['suite'], maxGuests: 4, status: 'available' },
+      { roomNumber: 'DSU-002', roomTypeId: roomTypeMap['suite'], maxGuests: 4, status: 'occupied' },
+      { roomNumber: 'DSU-003', roomTypeId: roomTypeMap['suite'], maxGuests: 4, status: 'available' },
 
-      // Family Desert Tent (3 rooms)
-      { roomNumber: 'FT-001', roomTypeId: roomTypeMap['family'], status: 'available', location: 'Family Area' },
-      { roomNumber: 'FT-002', roomTypeId: roomTypeMap['family'], status: 'occupied', location: 'Family Area' },
-      { roomNumber: 'FT-003', roomTypeId: roomTypeMap['family'], status: 'available', location: 'Family Area' },
+      // Family Desert Tent (3 rooms) - maxOccupancy: 6
+      { roomNumber: 'FT-001', roomTypeId: roomTypeMap['family'], maxGuests: 6, status: 'available' },
+      { roomNumber: 'FT-002', roomTypeId: roomTypeMap['family'], maxGuests: 6, status: 'occupied' },
+      { roomNumber: 'FT-003', roomTypeId: roomTypeMap['family'], maxGuests: 6, status: 'available' },
 
-      // Romantic Hideaway (3 rooms)
-      { roomNumber: 'RH-001', roomTypeId: roomTypeMap['romantic'], status: 'available', location: 'Private Desert View' },
-      { roomNumber: 'RH-002', roomTypeId: roomTypeMap['romantic'], status: 'occupied', location: 'Private Desert View' },
-      { roomNumber: 'RH-003', roomTypeId: roomTypeMap['romantic'], status: 'available', location: 'Private Desert View' },
+      // Romantic Hideaway (3 rooms) - maxOccupancy: 2
+      { roomNumber: 'RH-001', roomTypeId: roomTypeMap['romantic'], maxGuests: 2, status: 'available' },
+      { roomNumber: 'RH-002', roomTypeId: roomTypeMap['romantic'], maxGuests: 2, status: 'occupied' },
+      { roomNumber: 'RH-003', roomTypeId: roomTypeMap['romantic'], maxGuests: 2, status: 'available' },
 
-      // Adventure Base (3 rooms)
-      { roomNumber: 'AB-001', roomTypeId: roomTypeMap['adventure'], status: 'available', location: 'Adventure Zone' },
-      { roomNumber: 'AB-002', roomTypeId: roomTypeMap['adventure'], status: 'available', location: 'Adventure Zone' },
-      { roomNumber: 'AB-003', roomTypeId: roomTypeMap['adventure'], status: 'cleaning', location: 'Adventure Zone' }
+      // Adventure Base (3 rooms) - maxOccupancy: 4
+      { roomNumber: 'AB-001', roomTypeId: roomTypeMap['adventure'], maxGuests: 4, status: 'available' },
+      { roomNumber: 'AB-002', roomTypeId: roomTypeMap['adventure'], maxGuests: 4, status: 'available' },
+      { roomNumber: 'AB-003', roomTypeId: roomTypeMap['adventure'], maxGuests: 4, status: 'cleaning' }
     ];
 
     // Insert rooms

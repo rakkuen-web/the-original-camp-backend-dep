@@ -149,21 +149,26 @@ router.get('/availability', async (req, res) => {
     const RoomType = require('../models/RoomType');
     
     // Get all room types
-    const roomTypes = await RoomType.find({ isActive: true });
+    const roomTypes = await RoomType.find({});
     const availability = [];
     
     for (const roomType of roomTypes) {
-      // Get rooms of this type that can accommodate the guests
+      // Get rooms of this type
       const availableRooms = await Room.find({
-        roomType: roomType.name,
-        maxGuests: { $gte: guestCount },
-        isActive: true
+        roomTypeId: roomType._id,
+        isActive: true,
+        status: 'available'
       });
       
+      // Check if room type can accommodate guests
+      if (roomType.maxOccupancy < guestCount) {
+        continue; // Skip this room type
+      }
+      
       if (availableRooms.length > 0) {
-        // Check for conflicting reservations
+        // Check for conflicting reservations using roomType name
         const conflictingReservations = await Reservation.find({
-          roomType: roomType.name,
+          roomType: roomType.type,
           status: { $in: ['confirmed', 'pending'] },
           $or: [{
             checkIn: { $lt: checkOutDate },
@@ -175,23 +180,31 @@ router.get('/availability', async (req, res) => {
         
         if (availableCount > 0) {
           const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-          const totalPrice = availableRooms[0].pricePerNight * nights;
+          const totalPrice = roomType.price * nights;
           
           availability.push({
-            roomType: roomType.name,
+            roomType: roomType.type,
+            name: roomType.name,
             description: roomType.description,
-            maxGuests: availableRooms[0].maxGuests,
-            pricePerNight: availableRooms[0].pricePerNight,
+            maxGuests: roomType.maxOccupancy,
+            pricePerNight: roomType.price,
             totalPrice,
             availableCount,
             nights,
-            amenities: roomType.amenities || []
+            amenities: roomType.amenities || [],
+            images: roomType.images || []
           });
         }
       }
     }
     
-    res.json({ availability });
+    res.json({ 
+      availability,
+      checkIn: checkInDate,
+      checkOut: checkOutDate,
+      guests: guestCount,
+      nights: Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24))
+    });
   } catch (error) {
     console.error('Availability check error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
