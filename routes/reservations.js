@@ -268,4 +268,60 @@ router.get('/all', async (req, res) => {
   }
 });
 
+// Update reservation status
+router.patch('/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const reservation = await Reservation.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    
+    if (!reservation) {
+      return res.status(404).json({ message: 'Reservation not found' });
+    }
+    
+    // Send review email if status is completed
+    if (status === 'completed') {
+      try {
+        const reviewLink = `https://original-camp-frontend-5p54.vercel.app/review?booking=${reservation.bookingRef}`;
+        const { sendReviewRequest } = require('../services/emailService');
+        await sendReviewRequest({
+          guestName: reservation.guestName,
+          guestEmail: reservation.guestEmail,
+          bookingRef: reservation.bookingRef,
+          reviewLink
+        });
+      } catch (emailError) {
+        console.error('Failed to send review email:', emailError);
+      }
+    }
+    
+    res.json(reservation);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Update payment status
+router.patch('/:id/payment', async (req, res) => {
+  try {
+    const { paymentStatus } = req.body;
+    const reservation = await Reservation.findByIdAndUpdate(
+      req.params.id,
+      { paymentStatus },
+      { new: true }
+    );
+    
+    if (!reservation) {
+      return res.status(404).json({ message: 'Reservation not found' });
+    }
+    
+    res.json(reservation);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;
