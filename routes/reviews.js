@@ -89,6 +89,27 @@ router.post('/test-email/:bookingRef', async (req, res) => {
   }
 });
 
+// Submit review without token (using booking reference)
+router.post('/submit', async (req, res) => {
+  try {
+    const { rating, comment, guestName, guestEmail, bookingRef } = req.body;
+
+    const review = new Review({
+      guestName,
+      guestEmail,
+      bookingRef,
+      rating,
+      comment,
+      isPublished: false
+    });
+
+    await review.save();
+    res.json({ message: 'Review submitted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Toggle review publish status
 router.patch('/:id/publish', async (req, res) => {
   try {
@@ -103,6 +124,17 @@ router.patch('/:id/publish', async (req, res) => {
     await review.save();
 
     res.json(review);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Delete review
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Review.findByIdAndDelete(id);
+    res.json({ message: 'Review deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
